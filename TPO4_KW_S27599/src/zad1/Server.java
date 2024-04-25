@@ -14,8 +14,10 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 public class Server implements Runnable {
 
@@ -38,6 +40,8 @@ public class Server implements Runnable {
             serverSocketChannel = ServerSocketChannel.open();
             serverSocketChannel.configureBlocking(false);
             serverSocketChannel.socket().bind(new InetSocketAddress(host, port));
+            selector = Selector.open();
+
             serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
         } catch (IOException e) {
             e.printStackTrace();
@@ -99,15 +103,19 @@ public class Server implements Runnable {
                     CharBuffer decoded = Charset.forName("ISO-8859-2").decode(buffer);
                     while (decoded.hasRemaining()){
                         char ch = decoded.get();
-                        if(Character.toString(ch).equals("\\r")||Character.toString(ch).equals("\\n"))
+                        if(Character.toString(ch).equals("\r")||Character.toString(ch).equals("\n"))
                             break readLoop;
                         request.append(ch);
                     }
                 }
             }
-
-            //obsługa requestu
             System.out.println(request);
+//            Pattern reqPatt = Pattern.compile(" +", 3);
+//
+//            //obsługa requestu
+//            String[] req = reqPatt.split(request, 3);
+//            String cmd = req[0];
+//            System.out.println(Arrays.toString(req));
 
 
 

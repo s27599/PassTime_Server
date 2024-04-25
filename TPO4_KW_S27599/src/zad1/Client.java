@@ -7,6 +7,7 @@ package zad1;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
 public class Client implements Runnable {
@@ -15,11 +16,14 @@ public class Client implements Runnable {
     private int port;
     private String id;
     private SocketChannel socketChannel;
+    private ByteBuffer inbuf;
+
 
     public Client(String host, int port, String id) {
         this.host = host;
         this.port = port;
         this.id = id;
+        this.inbuf = ByteBuffer.allocateDirect(1024);
         try {
             socketChannel = SocketChannel.open();
             socketChannel.configureBlocking(false);
@@ -35,6 +39,8 @@ public class Client implements Runnable {
             if (!socketChannel.isOpen())
                 socketChannel = SocketChannel.open();
             socketChannel.connect(new InetSocketAddress(host, port));
+            while (!socketChannel.finishConnect()) {
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -42,7 +48,17 @@ public class Client implements Runnable {
     }
 
     public String send(String req) {
-        return "";
+        try {
+            ByteBuffer buffer
+                    = ByteBuffer.allocate(1024);
+            buffer.put(req.getBytes());
+            buffer.put((byte) '\n');
+            buffer.flip();
+            socketChannel.write(buffer);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return "1";
     }
 
     @Override
