@@ -14,10 +14,8 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
-import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 public class Server implements Runnable {
 
@@ -28,7 +26,7 @@ public class Server implements Runnable {
     Thread thread;
     private ByteBuffer buffer = ByteBuffer.allocate(1024);
 
-    private StringBuffer request = new StringBuffer();
+    private StringBuilder request = new StringBuilder();
 
     public Server(String host, int port) {
         this.host = host;
@@ -63,10 +61,10 @@ public class Server implements Runnable {
         while (!thread.isInterrupted()) {
             try {
                 selector.select();
-                Set keys = selector.selectedKeys();
-                Iterator iter = keys.iterator();
+                Set<SelectionKey> keys = selector.selectedKeys();
+                Iterator<SelectionKey> iter = keys.iterator();
                 while (iter.hasNext()) {
-                    SelectionKey key = (SelectionKey) iter.next();
+                    SelectionKey key =iter.next();
                     iter.remove();
                     if (key.isAcceptable()) {
                         SocketChannel socketChannel = serverSocketChannel.accept();
@@ -95,27 +93,32 @@ public class Server implements Runnable {
         request.setLength(0);
         buffer.clear();
         try {
-            readLoop:
-            while (true) {
+//            readLoop:
+//            while (true) {
                 int n = socketChannel.read(buffer);
                 if (n>0){
                     buffer.flip();
                     CharBuffer decoded = Charset.forName("ISO-8859-2").decode(buffer);
                     while (decoded.hasRemaining()){
                         char ch = decoded.get();
-                        if(Character.toString(ch).equals("\r")||Character.toString(ch).equals("\n"))
-                            break readLoop;
                         request.append(ch);
+                        if(Character.toString(ch).equals("\r")||Character.toString(ch).equals("\n")) {
+                            System.out.println(request);
+                            request.setLength(0);
+                        }
+//                            break readLoop;
                     }
-                }
+//                } else if (n == -1) {
+////                    break;
+//                }
             }
             System.out.println(request);
-//            Pattern reqPatt = Pattern.compile(" +", 3);
-//
-//            //obsługa requestu
-//            String[] req = reqPatt.split(request, 3);
-//            String cmd = req[0];
-//            System.out.println(Arrays.toString(req));
+            String response = processRequest(request.toString());
+
+            // Odpowiedź na żądanie
+            ByteBuffer responseBuffer = ByteBuffer.wrap(response.getBytes());
+            socketChannel.write(responseBuffer);
+            socketChannel.close();
 
 
 
@@ -127,5 +130,8 @@ public class Server implements Runnable {
                 socketChannel.socket().close();
             }catch (IOException ex){}
         }
+    }
+    private String processRequest(String request) {
+        return "Server received: " + request;
     }
 }

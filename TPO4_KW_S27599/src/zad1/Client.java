@@ -10,7 +10,7 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 
-public class Client implements Runnable {
+public class Client {
 
     private String host;
     private int port;
@@ -61,8 +61,5 @@ public class Client implements Runnable {
         return "1";
     }
 
-    @Override
-    public void run() {
 
-    }
 }
