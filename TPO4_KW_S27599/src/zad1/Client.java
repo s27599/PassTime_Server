@@ -8,7 +8,9 @@ package zad1;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
 import java.nio.channels.SocketChannel;
+import java.nio.charset.Charset;
 
 public class Client {
 
@@ -40,14 +42,16 @@ public class Client {
                 socketChannel = SocketChannel.open();
             socketChannel.connect(new InetSocketAddress(host, port));
             while (!socketChannel.finishConnect()) {
+                Thread.sleep(200);
             }
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
 
     }
 
     public String send(String req) {
+        StringBuilder response = new StringBuilder();
         try {
             ByteBuffer buffer
                     = ByteBuffer.allocate(1024);
@@ -58,7 +62,30 @@ public class Client {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return "1";
+        inbuf.clear();
+        try {
+            int n;
+            do {
+                n = socketChannel.read(inbuf);
+            } while (n == 0);
+            if (n > 0) {
+
+                inbuf.flip();
+                CharBuffer decoded = Charset.forName("ISO-8859-2").decode(inbuf);
+                while (decoded.hasRemaining()) {
+                    char ch = decoded.get();
+                    if (Character.toString(ch).equals("\r") || Character.toString(ch).equals("\n"))
+                        break;
+                    response.append(ch);
+
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+        return response.toString();
     }
 
 

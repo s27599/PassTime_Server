@@ -64,7 +64,7 @@ public class Server implements Runnable {
                 Set<SelectionKey> keys = selector.selectedKeys();
                 Iterator<SelectionKey> iter = keys.iterator();
                 while (iter.hasNext()) {
-                    SelectionKey key =iter.next();
+                    SelectionKey key = iter.next();
                     iter.remove();
                     if (key.isAcceptable()) {
                         SocketChannel socketChannel = serverSocketChannel.accept();
@@ -95,42 +95,40 @@ public class Server implements Runnable {
         try {
 //            readLoop:
 //            while (true) {
-                int n = socketChannel.read(buffer);
-                if (n>0){
-                    buffer.flip();
-                    CharBuffer decoded = Charset.forName("ISO-8859-2").decode(buffer);
-                    while (decoded.hasRemaining()){
-                        char ch = decoded.get();
-                        request.append(ch);
-                        if(Character.toString(ch).equals("\r")||Character.toString(ch).equals("\n")) {
-                            System.out.println(request);
-                            request.setLength(0);
-                        }
-//                            break readLoop;
+            int n = socketChannel.read(buffer);
+            if (n > 0) {
+                buffer.flip();
+                CharBuffer decoded = Charset.forName("ISO-8859-2").decode(buffer);
+                while (decoded.hasRemaining()) {
+                    char ch = decoded.get();
+                    request.append(ch);
+                    if (Character.toString(ch).equals("\r") || Character.toString(ch).equals("\n")) {
+                        String response = processRequest(request.toString());
+                        ByteBuffer responseBuffer = ByteBuffer.wrap(response.getBytes());
+                        socketChannel.write(responseBuffer);
+                        request.setLength(0);
                     }
+//                            break readLoop;
+                }
 //                } else if (n == -1) {
 ////                    break;
 //                }
             }
-            System.out.println(request);
-            String response = processRequest(request.toString());
+//            System.out.println(request);
 
-            // Odpowiedź na żądanie
-            ByteBuffer responseBuffer = ByteBuffer.wrap(response.getBytes());
-            socketChannel.write(responseBuffer);
-            socketChannel.close();
+//            socketChannel.close();
 
 
-
-
-        }catch (IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
             try {
                 socketChannel.close();
                 socketChannel.socket().close();
-            }catch (IOException ex){}
+            } catch (IOException ex) {
+            }
         }
     }
+
     private String processRequest(String request) {
         return "Server received: " + request;
     }
