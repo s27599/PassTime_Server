@@ -11,6 +11,7 @@ import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 public class Client {
 
@@ -71,11 +72,11 @@ public class Client {
             if (n > 0) {
 
                 inbuf.flip();
-                CharBuffer decoded = Charset.forName("ISO-8859-2").decode(inbuf);
+                CharBuffer decoded = StandardCharsets.UTF_8.decode(inbuf);
                 while (decoded.hasRemaining()) {
                     char ch = decoded.get();
-                    if (Character.toString(ch).equals("\r") || Character.toString(ch).equals("\n"))
-                        break;
+//                    if (Character.toString(ch).equals("\r"))
+//                        break;
                     response.append(ch);
 
                 }

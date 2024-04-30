@@ -14,8 +14,8 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
-import java.util.Iterator;
-import java.util.Set;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 public class Server implements Runnable {
 
@@ -25,8 +25,11 @@ public class Server implements Runnable {
     private Selector selector = null;
     Thread thread;
     private ByteBuffer buffer = ByteBuffer.allocate(1024);
-
     private StringBuilder request = new StringBuilder();
+
+    private String user;
+    private static Map<String, List<String>> clientLogs = new HashMap<>();
+    private static List<String> serverLog = new ArrayList<>();
 
     public Server(String host, int port) {
         this.host = host;
@@ -53,7 +56,11 @@ public class Server implements Runnable {
     }
 
     public String getServerLog() {
-        return "";
+        StringBuilder sb = new StringBuilder();
+        for (String str : serverLog) {
+            sb.append(str).append("\n");
+        }
+        return sb.toString();
     }
 
     @Override
@@ -93,12 +100,10 @@ public class Server implements Runnable {
         request.setLength(0);
         buffer.clear();
         try {
-//            readLoop:
-//            while (true) {
             int n = socketChannel.read(buffer);
             if (n > 0) {
                 buffer.flip();
-                CharBuffer decoded = Charset.forName("ISO-8859-2").decode(buffer);
+                CharBuffer decoded = StandardCharsets.UTF_8.decode(buffer);
                 while (decoded.hasRemaining()) {
                     char ch = decoded.get();
                     request.append(ch);
@@ -108,15 +113,10 @@ public class Server implements Runnable {
                         socketChannel.write(responseBuffer);
                         request.setLength(0);
                     }
-//                            break readLoop;
-                }
-//                } else if (n == -1) {
-////                    break;
-//                }
-            }
-//            System.out.println(request);
 
-//            socketChannel.close();
+                }
+
+            }
 
 
         } catch (IOException e) {
@@ -130,6 +130,27 @@ public class Server implements Runnable {
     }
 
     private String processRequest(String request) {
-        return "Server received: " + request;
+        request = request.replace("\n", "");
+        if (request.startsWith("login")) {
+            user = request.split(" ")[1];
+            clientLogs.put(user, new ArrayList<>());
+            clientLogs.get(user).add("=== "+user+" log start ===");
+            clientLogs.get(user).add("logged in");
+            return "logged in";
+        } else if (request.equals("bye")) {
+            return "logged out";
+        } else if (request.equals("bye and log transfer")) {
+            StringBuilder sb = new StringBuilder();
+            for (String str: clientLogs.get(user)){
+                sb.append(str).append("\n");
+            }
+            return sb.toString();//toEdit
+        } else if (request.matches("[0-9]{4}-[0-9]{2}-[0-9]{2}.*")) {
+            String[] requestSplit = request.split(" ");
+            return Time.passed(requestSplit[0], requestSplit[1]);
+        }
+        //garbage
+        return request;
+
     }
 }
