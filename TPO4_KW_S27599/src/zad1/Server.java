@@ -15,6 +15,9 @@ import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.util.*;
 
 public class Server implements Runnable {
@@ -130,24 +133,34 @@ public class Server implements Runnable {
     }
 
     private String processRequest(String request) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
         request = request.replace("\n", "");
         if (request.startsWith("login")) {
             user = request.split(" ")[1];
             clientLogs.put(user, new ArrayList<>());
             clientLogs.get(user).add("=== "+user+" log start ===");
             clientLogs.get(user).add("logged in");
+            serverLog.add(user + " logged in at "+ LocalDateTime.now().format(formatter));
             return "logged in";
         } else if (request.equals("bye")) {
+            clientLogs.get(user).add("logged out");
+            serverLog.add(user + " logged out at "+ LocalDateTime.now().format(formatter));
             return "logged out";
         } else if (request.equals("bye and log transfer")) {
+            clientLogs.get(user).add("logged out");
+            serverLog.add(user + " logged out at "+ LocalDateTime.now().format(formatter));
             StringBuilder sb = new StringBuilder();
             for (String str: clientLogs.get(user)){
                 sb.append(str).append("\n");
             }
-            return sb.toString();//toEdit
+            return sb.toString();
         } else if (request.matches("[0-9]{4}-[0-9]{2}-[0-9]{2}.*")) {
             String[] requestSplit = request.split(" ");
-            return Time.passed(requestSplit[0], requestSplit[1]);
+            String result = Time.passed(requestSplit[0], requestSplit[1]);
+            clientLogs.get(user).add("Request: "+request);
+            clientLogs.get(user).add("Result:\n"+result);
+            serverLog.add(user+" request at "+LocalDateTime.now().format(formatter)+" \""+request+"\"");
+            return result;
         }
         //garbage
         return request;

@@ -31,9 +31,9 @@ public class Main {
     clRequests.forEach( (id, reqList) -> {
       Client c = new Client(host, port, id);
       if (concur) {
-//        ClientTask ctask = ClientTask.create(c, reqList, showRes);
-//        ctasks.add(ctask);
-//        es.execute(ctask);
+        ClientTask ctask = ClientTask.create(c, reqList, showRes);
+        ctasks.add(ctask);
+        es.execute(ctask);
       } else {
         c.connect();
         c.send("login " + id);
@@ -47,16 +47,16 @@ public class Main {
     });
 
     if (concur) {
-//      ctasks.forEach( task -> {
-//        try {
-//          String log = task.get();
-//          clogs.add(log);
-//        } catch (InterruptedException | ExecutionException exc) {
-//          System.out.println(exc);
-//        }
-//      });
-//      clogs.forEach( System.out::println);
-//      es.shutdown();
+      ctasks.forEach( task -> {
+        try {
+          String log = task.get();
+          clogs.add(log);
+        } catch (InterruptedException | ExecutionException exc) {
+          System.out.println(exc);
+        }
+      });
+      clogs.forEach( System.out::println);
+      es.shutdown();
     }
     s.stopServer();
     System.out.println("\n=== Server log ===");

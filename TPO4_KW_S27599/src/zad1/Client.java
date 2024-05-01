@@ -51,6 +51,10 @@ public class Client {
 
     }
 
+    public String getId() {
+        return id;
+    }
+
     public String send(String req) {
         StringBuilder response = new StringBuilder();
         try {
