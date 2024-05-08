@@ -101,8 +101,9 @@ public class Server implements Runnable {
     }
 
     private void serviceRequest(SocketChannel socketChannel) {
-        if (!socketChannel.isOpen())
+        if (!socketChannel.isOpen()) {
             return;
+        }
         request.setLength(0);
         buffer.clear();
         try {
@@ -113,8 +114,9 @@ public class Server implements Runnable {
                 while (decoded.hasRemaining()) {
                     char ch = decoded.get();
                     request.append(ch);
-                    if (Character.toString(ch).equals("\r") || Character.toString(ch).equals("\n")) {
+                    if (Character.toString(ch).equals("\u0004")) {
                         String response = processRequest(request.toString(), socketChannel);
+                        response = response + "\u0004";
                         ByteBuffer responseBuffer = ByteBuffer.wrap(response.getBytes());
                         socketChannel.write(responseBuffer);
                         request.setLength(0);
@@ -138,7 +140,7 @@ public class Server implements Runnable {
 
     private String processRequest(String request, SocketChannel socketChannel) throws IOException {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
-        request = request.replace("\n", "");
+        request = request.replace("\u0004", "");
         String s = socketChannel.getRemoteAddress().toString();
         if (request.startsWith("login")) {
             user = request.split(" ")[1];

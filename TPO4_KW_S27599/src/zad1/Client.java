@@ -56,7 +56,7 @@ public class Client {
         try {
             ByteBuffer buffer = ByteBuffer.allocate(1024);
             buffer.put(req.getBytes());
-            buffer.put((byte) '\n');
+            buffer.put((byte) '\u0004');
             buffer.flip();
             socketChannel.write(buffer);
         } catch (IOException e) {
@@ -65,19 +65,19 @@ public class Client {
         inbuf.clear();
         try {
             int n;
-            do {
+            boolean all = false;
+            reedloop:
+            while (!all) {
                 n = socketChannel.read(inbuf);
-            } while (n == 0);
-            if (n > 0) {
-
-                inbuf.flip();
-                CharBuffer decoded = StandardCharsets.UTF_8.decode(inbuf);
-                while (decoded.hasRemaining()) {
-                    char ch = decoded.get();
-//                    if (Character.toString(ch).equals("\r"))
-//                        break;
-                    response.append(ch);
-
+                if (n > 0) {
+                    inbuf.flip();
+                    CharBuffer decoded = StandardCharsets.UTF_8.decode(inbuf);
+                    while (decoded.hasRemaining()) {
+                        char ch = decoded.get();
+                        if (Character.toString(ch).equals("\u0004"))
+                            all = true;
+                        response.append(ch);
+                    }
                 }
             }
         } catch (IOException e) {
