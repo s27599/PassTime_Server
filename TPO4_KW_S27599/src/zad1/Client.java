@@ -10,7 +10,6 @@ import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.channels.SocketChannel;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
 public class Client {
@@ -29,7 +28,6 @@ public class Client {
         this.inbuf = ByteBuffer.allocateDirect(1024);
         try {
             socketChannel = SocketChannel.open();
-            socketChannel.configureBlocking(false);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -42,10 +40,8 @@ public class Client {
             if (!socketChannel.isOpen())
                 socketChannel = SocketChannel.open();
             socketChannel.connect(new InetSocketAddress(host, port));
-            while (!socketChannel.finishConnect()) {
-                Thread.sleep(200);
-            }
-        } catch (IOException | InterruptedException e) {
+            socketChannel.configureBlocking(false);
+        } catch (IOException e) {
             e.printStackTrace();
         }
 
@@ -58,8 +54,7 @@ public class Client {
     public String send(String req) {
         StringBuilder response = new StringBuilder();
         try {
-            ByteBuffer buffer
-                    = ByteBuffer.allocate(1024);
+            ByteBuffer buffer = ByteBuffer.allocate(1024);
             buffer.put(req.getBytes());
             buffer.put((byte) '\n');
             buffer.flip();

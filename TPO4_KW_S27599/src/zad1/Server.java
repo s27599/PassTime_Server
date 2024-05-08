@@ -26,7 +26,7 @@ public class Server implements Runnable {
     private int port;
     private ServerSocketChannel serverSocketChannel = null;
     private Selector selector = null;
-    Thread thread;
+    private Thread thread;
     private ByteBuffer buffer = ByteBuffer.allocate(1024);
     private StringBuilder request = new StringBuilder();
 
@@ -69,8 +69,8 @@ public class Server implements Runnable {
 
     @Override
     public void run() {
-        while (!thread.isInterrupted()) {
-            try {
+        try {
+            while (!thread.isInterrupted()) {
                 selector.select();
                 Set<SelectionKey> keys = selector.selectedKeys();
                 Iterator<SelectionKey> iter = keys.iterator();
@@ -90,9 +90,11 @@ public class Server implements Runnable {
                 }
 
 
-            } catch (IOException e) {
-                e.printStackTrace();
             }
+            selector.close();
+            serverSocketChannel.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
 
@@ -112,7 +114,7 @@ public class Server implements Runnable {
                     char ch = decoded.get();
                     request.append(ch);
                     if (Character.toString(ch).equals("\r") || Character.toString(ch).equals("\n")) {
-                        String response = processRequest(request.toString(),socketChannel);
+                        String response = processRequest(request.toString(), socketChannel);
                         ByteBuffer responseBuffer = ByteBuffer.wrap(response.getBytes());
                         socketChannel.write(responseBuffer);
                         request.setLength(0);
@@ -129,42 +131,43 @@ public class Server implements Runnable {
                 socketChannel.close();
                 socketChannel.socket().close();
             } catch (IOException ex) {
+                e.printStackTrace();
             }
         }
     }
 
-    private String processRequest(String request,SocketChannel socketChannel) throws IOException {
+    private String processRequest(String request, SocketChannel socketChannel) throws IOException {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss.SSS");
         request = request.replace("\n", "");
-       String s =socketChannel.getRemoteAddress().toString();
+        String s = socketChannel.getRemoteAddress().toString();
         if (request.startsWith("login")) {
             user = request.split(" ")[1];
-            usernamesMap.put(s,user);
+            usernamesMap.put(s, user);
             clientLogs.put(s, new ArrayList<>());
-            clientLogs.get(s).add("=== "+usernamesMap.get(s)+" log start ===");
+            clientLogs.get(s).add("=== " + usernamesMap.get(s) + " log start ===");
             clientLogs.get(s).add("logged in");
-            serverLog.add(usernamesMap.get(s) + " logged in at "+ LocalDateTime.now().format(formatter));
+            serverLog.add(usernamesMap.get(s) + " logged in at " + LocalDateTime.now().format(formatter));
             return "logged in";
         } else if (request.equals("bye")) {
             clientLogs.get(s).add("logged out");
-            clientLogs.get(s).add("=== "+ usernamesMap.get(s)+" log end ===");
-            serverLog.add(usernamesMap.get(s) + " logged out at "+ LocalDateTime.now().format(formatter));
+            clientLogs.get(s).add("=== " + usernamesMap.get(s) + " log end ===");
+            serverLog.add(usernamesMap.get(s) + " logged out at " + LocalDateTime.now().format(formatter));
             return "logged out";
         } else if (request.equals("bye and log transfer")) {
             clientLogs.get(s).add("logged out");
-            clientLogs.get(s).add("=== "+ usernamesMap.get(s)+" log end ===");
-            serverLog.add(usernamesMap.get(s) + " logged out at "+ LocalDateTime.now().format(formatter));
+            clientLogs.get(s).add("=== " + usernamesMap.get(s) + " log end ===");
+            serverLog.add(usernamesMap.get(s) + " logged out at " + LocalDateTime.now().format(formatter));
             StringBuilder sb = new StringBuilder();
-            for (String str: clientLogs.get(s)){
+            for (String str : clientLogs.get(s)) {
                 sb.append(str).append("\n");
             }
             return sb.toString();
         } else if (request.matches("[0-9]{4}-[0-9]{2}-[0-9]{2}.*")) {
             String[] requestSplit = request.split(" ");
             String result = Time.passed(requestSplit[0], requestSplit[1]);
-            clientLogs.get(s).add("Request: "+request);
-            clientLogs.get(s).add("Result:\n"+result);
-            serverLog.add(usernamesMap.get(s)+" request at "+LocalDateTime.now().format(formatter)+" \""+request+"\"");
+            clientLogs.get(s).add("Request: " + request);
+            clientLogs.get(s).add("Result:\n" + result);
+            serverLog.add(usernamesMap.get(s) + " request at " + LocalDateTime.now().format(formatter) + " \"" + request + "\"");
             return result;
         }
         //garbage

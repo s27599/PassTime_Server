@@ -7,6 +7,7 @@
 package zad1;
 
 
+import java.text.DecimalFormat;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -100,6 +101,8 @@ public class Time {
     }
     private static StringBuilder getNonCalendarStringBuilder(Duration between) {
         StringBuilder nonCalendar = new StringBuilder();
+        DecimalFormat format = new DecimalFormat("0.#");
+
         nonCalendar.append(" - mija: ");
         int offset = 0;
         if (between.toHours()%24 != 0 || between.toMinutes()%1440 != 0)
@@ -112,7 +115,8 @@ public class Time {
 
         double weeks = (double) (between.toDays()+offset) / 7.0;
         nonCalendar.append(" tygodni ");
-        nonCalendar.append((double) Math.round(weeks * 100) / 100.0);
+
+        nonCalendar.append(format.format((double) Math.round(weeks * 100) / 100.0));
         return nonCalendar;
     }
 
