@@ -20,6 +20,7 @@ import java.util.TimeZone;
 
 public class Time {
     public static String passed(String from, String to) {
+        Locale.setDefault(Locale.US);
         try {
             if (from.matches("[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}")) {
                 LocalDateTime fromTime = LocalDateTime.parse(from, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm"));
@@ -101,7 +102,7 @@ public class Time {
     }
     private static StringBuilder getNonCalendarStringBuilder(Duration between) {
         StringBuilder nonCalendar = new StringBuilder();
-        DecimalFormat format = new DecimalFormat("0.#");
+        DecimalFormat format = new DecimalFormat("0.##");
 
         nonCalendar.append(" - mija: ");
         int offset = 0;

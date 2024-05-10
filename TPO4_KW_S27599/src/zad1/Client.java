@@ -66,7 +66,7 @@ public class Client {
         try {
             int n;
             boolean all = false;
-            reedloop:
+
             while (!all) {
                 n = socketChannel.read(inbuf);
                 if (n > 0) {
@@ -74,9 +74,12 @@ public class Client {
                     CharBuffer decoded = StandardCharsets.UTF_8.decode(inbuf);
                     while (decoded.hasRemaining()) {
                         char ch = decoded.get();
-                        if (Character.toString(ch).equals("\u0004"))
+                        if (Character.toString(ch).equals("\u0004")){
                             all = true;
-                        response.append(ch);
+                        }
+                        else {
+                            response.append(ch);
+                        }
                     }
                 }
             }
